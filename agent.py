@@ -3,33 +3,31 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 
 print("=== AGENTE AUTONOMO START ===")
-print(f"1) ZAI_API_KEY presente: {'ZAI_API_KEY' in os.environ}")
 
-if "ZAI_API_KEY" not in os.environ:
-    raise SystemExit("ERROR: falta el secret ZAI_API_KEY")
+if "GEMINI_API_KEY" not in os.environ:
+    raise SystemExit("ERROR: falta el secret GEMINI_API_KEY")
 
 API_KEY = os.environ["GEMINI_API_KEY"].strip()
-print(f"1) API key length: {len(API_KEY)} chars (debe ser >20)")
+print(f"1) API key length: {len(API_KEY)} chars")
 
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + API_KEY
-MODEL = "gemini-2.0-flash"
 
 print("2) Buscando archivos .py...")
 py_files = [f for f in glob.glob("*.py") if f != "agent.py"]
 print(f"   encontrados: {py_files}")
 
 if not py_files:
-    raise SystemExit("ERROR: no hay archivos .py en la raiz del repo (aparte de agent.py)")
+    raise SystemExit("ERROR: no hay archivos .py en la raiz (aparte de agent.py)")
 
 code_dump = ""
 for f in py_files:
     with open(f) as fp:
         code_dump += f"\n\n### ARCHIVO: {f} ###\n{fp.read()}"
 
-print(f"3) Total de codigo leido: {len(code_dump)} chars")
+print(f"3) Total codigo leido: {len(code_dump)} chars")
 
 prompt = f"""Eres un ingeniero senior. Analiza el siguiente codigo y propone UNA mejora concreta.
-Responde SOLO con JSON valido (sin markdown, sin triple backticks), con esta estructura:
+Responde SOLO con JSON valido (sin markdown, sin backticks), con esta estructura:
 {{"archivo": "nombre.py", "nuevo_codigo": "...", "razon": "..."}}
 
 CODIGO:
@@ -55,7 +53,7 @@ except HTTPError as e:
     print(f"   Cuerpo: {error_body[:500]}")
     raise
 except Exception as e:
-    print(f"5) ERROR llamando API: {type(e).__name__}: {e}")
+    print(f"5) ERROR: {type(e).__name__}: {e}")
     raise
 
 content = content.strip()
@@ -69,10 +67,10 @@ try:
     result = json.loads(content)
 except Exception as e:
     print(f"6) ERROR parseando JSON: {e}")
-    print(f"   contenido recibido: {content[:500]}")
+    print(f"   contenido: {content[:500]}")
     raise
 
-print(f"6) Mejora propuesta para: {result.get('archivo')}")
+print(f"6) Mejora para: {result.get('archivo')}")
 
 with open(result["archivo"], "w") as f:
     f.write(result["nuevo_codigo"])
