@@ -1,20 +1,23 @@
 name: Agente autónomo
+
 on:
   schedule:
-    - cron: '0 */2 * * *'   # cada 2 horas
-  workflow_dispatch:         # para lanzarlo manualmente también
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
 
 jobs:
   run:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: python agent.py
-        env:
-                    GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Ejecutar agente
+        run: python agent.py
+      - name: Commit automático
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "🤖 mejora autónoma"
