@@ -4,13 +4,7 @@ from urllib.error import HTTPError
 
 print("=== AGENTE AUTONOMO START ===")
 
-if "GEMINI_API_KEY" not in os.environ:
-    raise SystemExit("ERROR: falta el secret GEMINI_API_KEY")
-
-API_KEY = os.environ["GEMINI_API_KEY"].strip()
-print(f"1) API key length: {len(API_KEY)} chars")
-
-API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + API_KEY
+API_URL = "https://text.pollinations.ai/openai"
 
 print("2) Buscando archivos .py...")
 py_files = [f for f in glob.glob("*.py") if f != "agent.py"]
@@ -34,18 +28,19 @@ CODIGO:
 {code_dump}
 """
 
-print("4) Llamando a Gemini API...")
+print("4) Llamando a Pollinations API...")
 req = Request(API_URL,
     data=json.dumps({
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.7}
+        "model": "openai",
+        "messages": [{"role":"user","content":prompt}],
+        "temperature": 0.7
     }).encode(),
     headers={"Content-Type": "application/json"}
 )
 
 try:
-    resp = json.loads(urlopen(req, timeout=60).read())
-    content = resp["candidates"][0]["content"]["parts"][0]["text"]
+    resp = json.loads(urlopen(req, timeout=90).read())
+    content = resp["choices"][0]["message"]["content"]
     print(f"5) Respuesta recibida: {len(content)} chars")
 except HTTPError as e:
     error_body = e.read().decode('utf-8', errors='replace')
