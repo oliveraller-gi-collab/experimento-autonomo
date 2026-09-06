@@ -1,5 +1,6 @@
 import os, glob, json
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 
 print("=== AGENTE AUTONOMO START ===")
 print(f"1) ZAI_API_KEY presente: {'ZAI_API_KEY' in os.environ}")
@@ -7,7 +8,9 @@ print(f"1) ZAI_API_KEY presente: {'ZAI_API_KEY' in os.environ}")
 if "ZAI_API_KEY" not in os.environ:
     raise SystemExit("ERROR: falta el secret ZAI_API_KEY")
 
-API_KEY = os.environ["ZAI_API_KEY"]
+API_KEY = os.environ["ZAI_API_KEY"].strip()
+print(f"   API key length: {len(API_KEY)} chars (debe ser >20)")
+
 API_URL = "https://api.z.ai/api/paas/v4/chat/completions"
 MODEL = "glm-4.6"
 
@@ -49,8 +52,13 @@ try:
     resp = json.loads(urlopen(req, timeout=60).read())
     content = resp["choices"][0]["message"]["content"]
     print(f"5) Respuesta recibida: {len(content)} chars")
+except HTTPError as e:
+    error_body = e.read().decode('utf-8', errors='replace')
+    print(f"5) ERROR HTTP {e.code}: {e.reason}")
+    print(f"   Cuerpo del error: {error_body[:500]}")
+    raise
 except Exception as e:
-    print(f"5) ERROR llamando API: {e}")
+    print(f"5) ERROR llamando API: {type(e).__name__}: {e}")
     raise
 
 content = content.strip()
